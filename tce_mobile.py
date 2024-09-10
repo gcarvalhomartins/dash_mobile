@@ -7,6 +7,7 @@ import pydeck as pdk
 #from dotenv import load_dotenv
 
 #load_dotenv()
+st.secrets()
 
 api_url = st.secrets("API_URL_UNIDADES")
 api_key = st.secrets("API_KEY")
