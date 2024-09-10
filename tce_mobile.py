@@ -3,10 +3,8 @@ import requests as rq
 import json
 import pandas as pd
 import streamlit as st
-import folium as fl
-from streamlit_folium import st_folium
+import pydeck as pdk
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
@@ -36,50 +34,45 @@ def main():
     unidades = df['unidade'].unique()
     unidades_selecionadas = st.selectbox("Selecione uma unidade", options=["selecione uma unidade"] + list(unidades))
 
-    if cidades_selecionadas != "Selecione uma opção..." and unidades_selecionadas != "Selecione uma opção...":
+    if cidades_selecionadas != "Selecione uma cidade" and unidades_selecionadas != "Selecione uma unidade":
 
         df_filtrando = df[(df['cidade'] == cidades_selecionadas) & (df['unidade'] == unidades_selecionadas)]
 
         df_filtrando = df_filtrando.dropna(subset=['latitude', 'longitude'])
 
         if not df_filtrando.empty:
-
             st.subheader("Mapa de Localização das Unidades")
 
-            m = fl.Map(location=[df_filtrando['latitude'].mean(), df_filtrando['longitude'].mean()], zoom_start=12)
+            # Define a camada de pontos no mapa
+            layer = pdk.Layer(
+                'ScatterplotLayer',
+                data=df_filtrando,
+                get_position='[longitude, latitude]',
+                get_color='[200, 30, 0, 160]',  # Cor do marcador
+                get_radius=100,  # Tamanho dos pontos
+                pickable=True,
+            )
 
-            cores = {
-                'Checkin': 'blue',
-                'Check-in': 'blue',
-                'Checkout': 'red',
-                'Unidades': 'purple'
-            }
+            # Define o centro do mapa com base na média das coordenadas
+            view_state = pdk.ViewState(
+                latitude=df_filtrando['latitude'].mean(),
+                longitude=df_filtrando['longitude'].mean(),
+                zoom=12,
+                pitch=0,
+            )
 
-            for _, row in df_filtrando.iterrows():
-                fl.Marker(
-                    location=[row['latitude'], row['longitude']],
-                    popup=row['unidade'],
-                    icon=fl.Icon(color=cores.get(row['unidade'], 'gray'))
-                ).add_to(m)
+            # Renderiza o mapa
+            r = pdk.Deck(
+                layers=[layer],
+                initial_view_state=view_state,
+                tooltip={"text": "{unidade}"},  # Tooltip para mostrar a unidade
+            )
 
-                fl.Circle(
-                    location=[row['latitude'], row['longitude']],
-                    radius=100,
-                    color=cores.get(row['unidade'], 'gray'),
-                    fill=True,
-                    fill_opacity=0.2
-                ).add_to(m)
-     
-            st_folium(m, width=800, height=500)
- 
+            st.pydeck_chart(r)
+
         else:
             st.write("Localização não encontrada pelo filtro selecionado")
     else:
         st.write("Selecione uma cidade ou unidade...")
 
 main()
-
-
-# st.subheader(f'Tabela de unidades e categorias selecionadas: {cidades_selecionadas} e {unidades_selecionadas}')
-# st.dataframe(df_filtrando) 
-# test
