@@ -1,20 +1,18 @@
-import os
 import requests as rq
 import json
 import pandas as pd
 import streamlit as st
 import pydeck as pdk
-#from dotenv import load_dotenv
 
-#load_dotenv()
-st.secrets()
+# Acessa os segredos armazenados no Streamlit Cloud
+api_url = st.secrets["API_URL_UNIDADES"]
+api_key = st.secrets["API_KEY"]
 
-api_url = st.secrets("API_URL_UNIDADES")
-api_key = st.secrets("API_KEY")
-
+# Configura o cabeçalho da API
 headers = {"apikey": f"{api_key}"}
 response = rq.get(api_url, headers=headers)
 
+# Converte a resposta para um DataFrame
 data = json.loads(response.text)
 df = pd.DataFrame(data)
 
@@ -23,22 +21,20 @@ def separar_coordenadas(coordenadas):
     lat, lon = map(float, coordenadas.split(','))
     return pd.Series([lat, lon], index=['latitude', 'longitude'])
 
-# Aplicar a função para criar as colunas de latitude e longitude
+# Aplica a função para criar as colunas de latitude e longitude
 df[['latitude', 'longitude']] = df['coordenadas'].apply(separar_coordenadas)
 
 def main():
     st.title("TCE MOBILE =)")
 
     cidades = df['cidade'].unique()
-    cidades_selecionadas = st.selectbox("Selecione uma cidade", options=["selecione uma cidade"] + list(cidades))
+    cidades_selecionadas = st.selectbox("Selecione uma cidade", options=["Selecione uma cidade"] + list(cidades))
 
     unidades = df['unidade'].unique()
-    unidades_selecionadas = st.selectbox("Selecione uma unidade", options=["selecione uma unidade"] + list(unidades))
+    unidades_selecionadas = st.selectbox("Selecione uma unidade", options=["Selecione uma unidade"] + list(unidades))
 
     if cidades_selecionadas != "Selecione uma cidade" and unidades_selecionadas != "Selecione uma unidade":
-
         df_filtrando = df[(df['cidade'] == cidades_selecionadas) & (df['unidade'] == unidades_selecionadas)]
-
         df_filtrando = df_filtrando.dropna(subset=['latitude', 'longitude'])
 
         if not df_filtrando.empty:
