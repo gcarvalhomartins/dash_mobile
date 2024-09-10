@@ -4,12 +4,12 @@ import json
 import pandas as pd
 import streamlit as st
 import pydeck as pdk
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
-api_url = os.getenv("API_URL_UNIDADES")
-api_key = os.getenv("API_KEY")
+api_url = st.secrets("API_URL_UNIDADES")
+api_key = st.secrets("API_KEY")
 
 headers = {"apikey": f"{api_key}"}
 response = rq.get(api_url, headers=headers)
