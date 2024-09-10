@@ -3,7 +3,7 @@ import requests as rq
 import json
 import pandas as pd
 import streamlit as st
-import folium
+import folium as fl
 from streamlit_folium import st_folium
 from dotenv import load_dotenv
 
@@ -46,7 +46,7 @@ def main():
 
             st.subheader("Mapa de Localização das Unidades")
 
-            m = folium.Map(location=[df_filtrando['latitude'].mean(), df_filtrando['longitude'].mean()], zoom_start=12)
+            m = fl.Map(location=[df_filtrando['latitude'].mean(), df_filtrando['longitude'].mean()], zoom_start=12)
 
             cores = {
                 'Checkin': 'blue',
@@ -56,13 +56,13 @@ def main():
             }
 
             for _, row in df_filtrando.iterrows():
-                folium.Marker(
+                fl.Marker(
                     location=[row['latitude'], row['longitude']],
                     popup=row['unidade'],
-                    icon=folium.Icon(color=cores.get(row['unidade'], 'gray'))
+                    icon=fl.Icon(color=cores.get(row['unidade'], 'gray'))
                 ).add_to(m)
 
-                folium.Circle(
+                fl.Circle(
                     location=[row['latitude'], row['longitude']],
                     radius=100,
                     color=cores.get(row['unidade'], 'gray'),
