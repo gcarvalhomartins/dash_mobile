@@ -25,7 +25,7 @@ def separar_coordenadas(coordenadas):
 df[['latitude', 'longitude']] = df['coordenadas'].apply(separar_coordenadas)
 
 def main():
-    st.title("TCE MOBILE =)")
+    st.title("TCE AM")
 
     cidades = df['cidade'].unique()
     cidades_selecionadas = st.selectbox("Selecione uma cidade", options=["Selecione uma cidade"] + list(cidades))
