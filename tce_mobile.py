@@ -3,10 +3,6 @@ import json
 import pandas as pd
 import streamlit as st
 import pydeck as pdk
-#import os
-#from dotenv import load_dotenv
-
-#load_dotenv()
 
 # Acessa os segredos armazenados no Streamlit Cloud
 api_url = st.secrets["API_URL_UNIDADES"]
@@ -19,6 +15,9 @@ response = rq.get(api_url, headers=headers)
 # Converte a resposta para um DataFrame
 data = json.loads(response.text)
 df = pd.DataFrame(data)
+
+# Remove linhas onde 'coordenadas' é nulo
+df = df.dropna(subset=['coordenadas'])
 
 # Função para separar as coordenadas em latitude e longitude
 def separar_coordenadas(coordenadas):
@@ -53,6 +52,7 @@ def main():
     if unidades_selecionadas != "Todas as unidades":
         df_filtrando = df_filtrando[df_filtrando['unidade'] == unidades_selecionadas]
 
+    # Filtra para garantir que apenas registros com latitude e longitude sejam exibidos no mapa
     df_filtrando = df_filtrando.dropna(subset=['latitude', 'longitude'])
 
     # Verifica se há dados filtrados
@@ -60,7 +60,6 @@ def main():
         st.subheader("Mapa de Localização das Unidades")
 
         # Define a camada de pontos no mapa
-         
         layer = pdk.Layer(
             'ScatterplotLayer',
             data=df_filtrando,
@@ -87,7 +86,6 @@ def main():
         )
 
         st.pydeck_chart(r)
-
     else:
         st.write("Localização não encontrada pelo filtro selecionado")
 
