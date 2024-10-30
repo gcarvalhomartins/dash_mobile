@@ -4,7 +4,8 @@ import pandas as pd
 import streamlit as st
 import pydeck as pdk
 import os
-from dotenv import load_dotenv
+
+#from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
 # load_dotenv()
