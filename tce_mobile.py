@@ -3,86 +3,117 @@ import json
 import pandas as pd
 import streamlit as st
 import pydeck as pdk
+import os
+from dotenv import load_dotenv
+
+# Carrega variáveis de ambiente
+load_dotenv()
 
 # Acessa os segredos armazenados no Streamlit Cloud
 api_url = st.secrets["API_URL_UNIDADES"]
 api_key = st.secrets["API_KEY"]
+api_url_fiscalizacoes = st.secrets["API_URL_FISCALIZACOES"]
+# Configuração das URLs e da chave de API
+# api_url = os.getenv('API_URL_UNIDADES')
+# api_key = os.getenv("API_KEY")
+# api_url_fiscalizacoes = os.getenv("API_URL_FISCALIZACOES")
 
-# Configura o cabeçalho da API
+# Cabeçalhos de autenticação
 headers = {"apikey": f"{api_key}"}
-response = rq.get(api_url, headers=headers)
 
-# Converte a resposta para um DataFrame
-data = json.loads(response.text)
-df = pd.DataFrame(data)
+# Consulta dados da API das unidades
+response = rq.get(api_url, headers=headers)
+data_unidades = json.loads(response.text)
+df_unidades = pd.DataFrame(data_unidades)
 
 # Remove linhas onde 'coordenadas' é nulo
-df = df.dropna(subset=['coordenadas'])
+df_unidades = df_unidades.dropna(subset=['coordenadas'])
 
 # Função para separar as coordenadas em latitude e longitude
 def separar_coordenadas(coordenadas):
     lat, lon = map(float, coordenadas.split(','))
     return pd.Series([lat, lon], index=['latitude', 'longitude'])
 
-# Aplica a função para criar as colunas de latitude e longitude
-df[['latitude', 'longitude']] = df['coordenadas'].apply(separar_coordenadas)
+# Aplica a função para criar colunas de latitude e longitude
+df_unidades[['latitude', 'longitude']] = df_unidades['coordenadas'].apply(separar_coordenadas)
+
+# Consulta dados da API de fiscalizações
+response_fiscalizacoes = rq.get(api_url_fiscalizacoes, headers=headers)
+data_fiscalizacoes = json.loads(response_fiscalizacoes.text)
+df_fiscalizacoes = pd.DataFrame(data_fiscalizacoes)
+
+# Filtra fiscalizações apenas para tipos Checkin e Checkout e coordenadas não nulas
+df_fiscalizacoes = df_fiscalizacoes[
+    (df_fiscalizacoes['tipo'].isin(['Checkin', 'Checkout'])) & 
+    df_fiscalizacoes[['latitude', 'longitude']].notna().all(axis=1)
+]
+
+# Adiciona uma coluna 'color' no DataFrame com base no tipo de fiscalização
+df_fiscalizacoes['color'] = df_fiscalizacoes['tipo'].apply(lambda x: [0, 255, 0, 160] if x == "Checkin" else [255, 0, 0, 160])
 
 def main():
     st.title("TCE AM")
 
     # Filtro de cidades
-    cidades = df['cidade'].unique()
+    cidades = df_unidades['cidade'].unique()
     cidades_selecionadas = st.selectbox("Selecione uma cidade", options=["Todas as cidades"] + list(cidades))
 
     # Filtrar unidades com base na cidade selecionada
     if cidades_selecionadas == "Todas as cidades":
-        unidades = df['unidade'].unique()
+        unidades = df_unidades['unidade'].unique()
     else:
-        unidades = df[df['cidade'] == cidades_selecionadas]['unidade'].unique()
+        unidades = df_unidades[df_unidades['cidade'] == cidades_selecionadas]['unidade'].unique()
     
     # Filtro de unidades
     unidades_selecionadas = st.selectbox("Selecione uma unidade", options=["Todas as unidades"] + list(unidades))
 
-    # Filtrar por cidade e unidade
-    df_filtrando = df.copy()
-
+    # Filtra o DataFrame das unidades com base nos filtros selecionados
+    df_unidades_filtrado = df_unidades.copy()
     if cidades_selecionadas != "Todas as cidades":
-        df_filtrando = df_filtrando[df_filtrando['cidade'] == cidades_selecionadas]
-
+        df_unidades_filtrado = df_unidades_filtrado[df_unidades_filtrado['cidade'] == cidades_selecionadas]
     if unidades_selecionadas != "Todas as unidades":
-        df_filtrando = df_filtrando[df_filtrando['unidade'] == unidades_selecionadas]
+        df_unidades_filtrado = df_unidades_filtrado[df_unidades_filtrado['unidade'] == unidades_selecionadas]
 
-    # Filtra para garantir que apenas registros com latitude e longitude sejam exibidos no mapa
-    df_filtrando = df_filtrando.dropna(subset=['latitude', 'longitude'])
+    # Garantir que registros com latitude e longitude estejam presentes
+    df_unidades_filtrado = df_unidades_filtrado.dropna(subset=['latitude', 'longitude'])
 
-    # Verifica se há dados filtrados
-    if not df_filtrando.empty:
-        st.subheader("Mapa de Localização das Unidades")
+    if not df_unidades_filtrado.empty:
+        st.subheader("Mapa de Localização das Unidades e Fiscalizações")
 
-        # Define a camada de pontos no mapa
-        layer = pdk.Layer(
+        # Camada para unidades (pontos) com cor azul
+        layer_unidades = pdk.Layer(
             'ScatterplotLayer',
-            data=df_filtrando,
+            data=df_unidades_filtrado,
             get_position='[longitude, latitude]',
-            get_color='[200, 30, 0, 160]',  # Cor do marcador
-            get_radius=100,  # Tamanho dos pontos
+            get_color='[0, 0, 255, 160]',  # Azul para unidades
+            get_radius=40,  # Tamanho dos pontos
             pickable=True,
         )
 
-        # Define o centro do mapa com base na média das coordenadas
+        # Camada para fiscalizações com cores diferentes para Checkin e Checkout
+        layer_fiscalizacoes = pdk.Layer(
+            "ScatterplotLayer",
+            data=df_fiscalizacoes,
+            get_position="[longitude, latitude]",
+            get_color="color",  # Usa a coluna 'color' para definir a cor
+            get_radius=2,  # Tamanho dos pontos
+            pickable=True,
+        )
+
+        # Define o centro do mapa com base na média das coordenadas das unidades
         view_state = pdk.ViewState(
-            latitude=df_filtrando['latitude'].mean(),
-            longitude=df_filtrando['longitude'].mean(),
+            latitude=df_unidades_filtrado['latitude'].mean(),
+            longitude=df_unidades_filtrado['longitude'].mean(),
             zoom=12,
             pitch=0,
         )
 
-        # Renderiza o mapa
+        # Renderiza o mapa com ambas as camadas
         r = pdk.Deck(
             map_style='mapbox://styles/mapbox/streets-v11',
-            layers=[layer],
+            layers=[layer_unidades, layer_fiscalizacoes],
             initial_view_state=view_state,
-            tooltip={"text": "{unidade}"},  # Tooltip para mostrar a unidade
+            tooltip={"text": "{unidade}"}  # Tooltip para mostrar a unidade
         )
 
         st.pydeck_chart(r)
