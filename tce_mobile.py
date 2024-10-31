@@ -5,10 +5,10 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-#from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
-#load_dotenv()
+# load_dotenv()
 
 # Acessa os segredos armazenados no Streamlit Cloud
 api_url = st.secrets["API_URL_UNIDADES"]
@@ -16,9 +16,9 @@ api_key = st.secrets["API_KEY"]
 api_url_fiscalizacoes = st.secrets["API_URL_FISCALIZACOES"]
 
 # # Configuração das URLs e da chave de API
-# api_url = os.getenv('API_URL_UNIDADES')
-# api_key = os.getenv('API_KEY')
-# api_url_fiscalizacoes = os.getenv("API_URL_FISCALIZACOES")
+api_url = os.getenv('API_URL_UNIDADES')
+api_key = os.getenv('API_KEY')
+api_url_fiscalizacoes = os.getenv("API_URL_FISCALIZACOES")
 
 # Cabeçalhos de autenticação
 headers = {"apikey": f"{api_key}"}
@@ -111,7 +111,11 @@ def main():
             get_position='[longitude, latitude]',
             get_color='[0, 0, 255, 160]',  # Azul para unidades
             get_radius=40,  # Tamanho dos pontos
-            pickable=True
+            pickable=True,
+            tooltip={
+                "html": "<b>Unidade:</b> {unidade}<br>",
+                "style": {"backgroundColor": "steelblue", "color": "white"}
+            }
         )
 
         # Camada para fiscalizações com cores diferentes para Checkin e Checkout
@@ -121,7 +125,8 @@ def main():
             get_position="[longitude, latitude]",
             get_color="color",  # Usa a coluna 'color' para definir a cor
             get_radius=2,  # Tamanho dos pontos
-            pickable=True
+            pickable=True,
+            
         )
 
         # Define o centro do mapa com base na média das coordenadas das unidades
@@ -138,10 +143,7 @@ def main():
             layers=[layer_unidades, layer_fiscalizacoes],
             initial_view_state=view_state,
             tooltip={
-                "html": "<b>Tipo:</b> {tipo}<br>"
-                        "<b>Unidade:</b> {unidade}<br>"
-                        "<b>Comunicante:</b> {nomecomunicante}<br>"
-                        "<b>Distância:</b> {distancia_formatada}",
+                "html": "<b>Unidade:</b> {unidade}<br>",
                 "style": {"backgroundColor": "steelblue", "color": "white"}
             }
         )
