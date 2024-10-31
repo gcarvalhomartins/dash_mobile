@@ -5,10 +5,10 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
-load_dotenv()
+#load_dotenv()
 
 # Acessa os segredos armazenados no Streamlit Cloud
 api_url = st.secrets["API_URL_UNIDADES"]
