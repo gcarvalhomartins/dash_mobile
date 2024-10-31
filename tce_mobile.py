@@ -5,17 +5,17 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
-# load_dotenv()
+load_dotenv()
 
 # Acessa os segredos armazenados no Streamlit Cloud
 api_url = st.secrets["API_URL_UNIDADES"]
 api_key = st.secrets["API_KEY"]
 api_url_fiscalizacoes = st.secrets["API_URL_FISCALIZACOES"]
 
-# Configuração das URLs e da chave de API
+# # Configuração das URLs e da chave de API
 # api_url = os.getenv('API_URL_UNIDADES')
 # api_key = os.getenv('API_KEY')
 # api_url_fiscalizacoes = os.getenv("API_URL_FISCALIZACOES")
@@ -53,6 +53,11 @@ df_fiscalizacoes = df_fiscalizacoes[
 # Adiciona uma coluna 'color' no DataFrame com base no tipo de fiscalização
 df_fiscalizacoes['color'] = df_fiscalizacoes['tipo'].apply(lambda x: [0, 255, 0, 160] if x == "Checkin" else [255, 0, 0, 160])
 
+# Formata a distância para exibir em km e metros
+df_fiscalizacoes['distancia_formatada'] = df_fiscalizacoes['distancia'].apply(
+    lambda d: f"{int(d // 1000)} km {int(d % 1000)} m"
+)
+
 def main():
     st.title("TCE AM")
 
@@ -88,6 +93,14 @@ def main():
     if tipo_selecionado != "Todos os tipos":
         df_fiscalizacoes_filtrado = df_fiscalizacoes_filtrado[df_fiscalizacoes_filtrado['tipo'] == tipo_selecionado]
 
+    # Filtro de comunicantes com base nos outros filtros aplicados
+    comunicantes = ["Todos os comunicantes"] + sorted(df_fiscalizacoes_filtrado['nomecomunicante'].dropna().unique())
+    comunicante_selecionado = st.selectbox("Selecione um comunicante", options=comunicantes)
+
+    # Aplica o filtro de comunicante, caso selecionado
+    if comunicante_selecionado != "Todos os comunicantes":
+        df_fiscalizacoes_filtrado = df_fiscalizacoes_filtrado[df_fiscalizacoes_filtrado['nomecomunicante'] == comunicante_selecionado]
+
     if not df_unidades_filtrado.empty:
         st.subheader("Mapa de Localização das Unidades e Fiscalizações")
 
@@ -98,7 +111,7 @@ def main():
             get_position='[longitude, latitude]',
             get_color='[0, 0, 255, 160]',  # Azul para unidades
             get_radius=40,  # Tamanho dos pontos
-            pickable=True,
+            pickable=True
         )
 
         # Camada para fiscalizações com cores diferentes para Checkin e Checkout
@@ -108,7 +121,7 @@ def main():
             get_position="[longitude, latitude]",
             get_color="color",  # Usa a coluna 'color' para definir a cor
             get_radius=2,  # Tamanho dos pontos
-            pickable=True,
+            pickable=True
         )
 
         # Define o centro do mapa com base na média das coordenadas das unidades
@@ -119,12 +132,18 @@ def main():
             pitch=0,
         )
 
-        # Renderiza o mapa com ambas as camadas
+        # Renderiza o mapa com ambas as camadas e um tooltip único
         r = pdk.Deck(
             map_style='mapbox://styles/mapbox/streets-v11',
             layers=[layer_unidades, layer_fiscalizacoes],
             initial_view_state=view_state,
-            tooltip={"text": "{unidade}"}  # Tooltip para mostrar a unidade
+            tooltip={
+                "html": "<b>Tipo:</b> {tipo}<br>"
+                        "<b>Unidade:</b> {unidade}<br>"
+                        "<b>Comunicante:</b> {nomecomunicante}<br>"
+                        "<b>Distância:</b> {distancia_formatada}",
+                "style": {"backgroundColor": "steelblue", "color": "white"}
+            }
         )
 
         st.pydeck_chart(r)
@@ -132,4 +151,3 @@ def main():
         st.write("Localização não encontrada pelo filtro selecionado")
 
 main()
-
