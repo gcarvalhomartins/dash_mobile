@@ -5,7 +5,7 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-#from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
 # load_dotenv()
@@ -14,9 +14,10 @@ import os
 api_url = st.secrets["API_URL_UNIDADES"]
 api_key = st.secrets["API_KEY"]
 api_url_fiscalizacoes = st.secrets["API_URL_FISCALIZACOES"]
+
 # Configuração das URLs e da chave de API
 # api_url = os.getenv('API_URL_UNIDADES')
-# api_key = os.getenv("API_KEY")
+# api_key = os.getenv('API_KEY')
 # api_url_fiscalizacoes = os.getenv("API_URL_FISCALIZACOES")
 
 # Cabeçalhos de autenticação
@@ -55,28 +56,37 @@ df_fiscalizacoes['color'] = df_fiscalizacoes['tipo'].apply(lambda x: [0, 255, 0,
 def main():
     st.title("TCE AM")
 
-    # Filtro de cidades
-    cidades = df_unidades['cidade'].unique()
-    cidades_selecionadas = st.selectbox("Selecione uma cidade", options=["Todas as cidades"] + list(cidades))
+    # Filtro de cidades em ordem alfabética, removendo valores nulos
+    cidades = sorted(df_unidades['cidade'].dropna().unique())
+    cidades_selecionadas = st.selectbox("Selecione uma cidade", options=["Todas as cidades"] + cidades)
 
-    # Filtrar unidades com base na cidade selecionada
+    # Filtrar unidades com base na cidade selecionada e ordenar em ordem alfabética
     if cidades_selecionadas == "Todas as cidades":
-        unidades = df_unidades['unidade'].unique()
+        unidades = sorted(df_unidades['unidade'].dropna().unique())
     else:
-        unidades = df_unidades[df_unidades['cidade'] == cidades_selecionadas]['unidade'].unique()
+        unidades = sorted(df_unidades[df_unidades['cidade'] == cidades_selecionadas]['unidade'].dropna().unique())
     
     # Filtro de unidades
-    unidades_selecionadas = st.selectbox("Selecione uma unidade", options=["Todas as unidades"] + list(unidades))
-
+    unidades_selecionadas = st.selectbox("Selecione uma unidade", options=["Todas as unidades"] + unidades)
+    
+    # Filtro por tipo (Checkin e Checkout)
+    tipos = ["Todos os tipos"] + sorted(df_fiscalizacoes['tipo'].dropna().unique())
+    tipo_selecionado = st.selectbox("Selecione um tipo", options=tipos)
+    
     # Filtra o DataFrame das unidades com base nos filtros selecionados
     df_unidades_filtrado = df_unidades.copy()
     if cidades_selecionadas != "Todas as cidades":
         df_unidades_filtrado = df_unidades_filtrado[df_unidades_filtrado['cidade'] == cidades_selecionadas]
     if unidades_selecionadas != "Todas as unidades":
         df_unidades_filtrado = df_unidades_filtrado[df_unidades_filtrado['unidade'] == unidades_selecionadas]
-
+    
     # Garantir que registros com latitude e longitude estejam presentes
     df_unidades_filtrado = df_unidades_filtrado.dropna(subset=['latitude', 'longitude'])
+
+    # Aplica o filtro de tipo no DataFrame de fiscalizações, caso selecionado
+    df_fiscalizacoes_filtrado = df_fiscalizacoes.copy()
+    if tipo_selecionado != "Todos os tipos":
+        df_fiscalizacoes_filtrado = df_fiscalizacoes_filtrado[df_fiscalizacoes_filtrado['tipo'] == tipo_selecionado]
 
     if not df_unidades_filtrado.empty:
         st.subheader("Mapa de Localização das Unidades e Fiscalizações")
@@ -94,7 +104,7 @@ def main():
         # Camada para fiscalizações com cores diferentes para Checkin e Checkout
         layer_fiscalizacoes = pdk.Layer(
             "ScatterplotLayer",
-            data=df_fiscalizacoes,
+            data=df_fiscalizacoes_filtrado,
             get_position="[longitude, latitude]",
             get_color="color",  # Usa a coluna 'color' para definir a cor
             get_radius=2,  # Tamanho dos pontos
@@ -122,3 +132,4 @@ def main():
         st.write("Localização não encontrada pelo filtro selecionado")
 
 main()
+
