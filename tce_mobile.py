@@ -5,14 +5,12 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-hide_avatar = """
-<style>
-[data-testid="stDecoration"] { display: none !important; }
-[data-testid="stStickyIcon"] { display: none !important; }
-</style>
-"""
-st.markdown(hide_avatar, unsafe_allow_html=True)
-# from dotenv import load_dotenv
+st.markdown("""
+    <script>
+        document.querySelector('[data-testid="stDecoration"]').style.display = 'none';
+        document.querySelector('[data-testid="stStickyIcon"]').style.display = 'none';
+    </script>
+""", unsafe_allow_html=True)
 
 # Carrega variáveis de ambiente
 # load_dotenv()
