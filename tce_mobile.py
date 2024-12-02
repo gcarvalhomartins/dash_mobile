@@ -5,6 +5,15 @@ import streamlit as st
 import pydeck as pdk
 import os
 
+st.set_page_config(page_title="Seu App", page_icon=":guardsman:", layout="wide", initial_sidebar_state="expanded")
+
+st.markdown("""
+    <style>
+        header {display: none;}  /* Remover cabeçalho */
+        footer {display: none;}  /* Remover rodapé */
+        #MainMenu {display: none;}  /* Remover menu */
+    </style>
+""", unsafe_allow_html=True)
 
 # Carrega variáveis de ambiente
 # load_dotenv()
@@ -150,14 +159,4 @@ def main():
         st.pydeck_chart(r)
     else:
         st.write("Localização não encontrada pelo filtro selecionado")
-    # Desabilitar a barra lateral, o cabeçalho e o rodapé
-    st.markdown("""
-    <style>
-        #MainMenu {visibility: hidden;}  /* Ocultar o menu principal */
-        footer {visibility: hidden;}     /* Ocultar o rodapé */
-        header {visibility: hidden;}     /* Ocultar o cabeçalho */
-        .stApp {padding-top: 0;}         /* Ajustar o padding do topo */
-        .css-1v3fvcr {display: none;}    /* Ocultar o ícone do criador */
-    </style>
-    """, unsafe_allow_html=True)
 main()
