@@ -7,9 +7,8 @@ import os
 
 hide_avatar = """
 <style>
-[data-testid="stDecoration"] {
-    display: none;
-}
+[data-testid="stDecoration"] { display: none !important; }
+[data-testid="stStickyIcon"] { display: none !important; }
 </style>
 """
 st.markdown(hide_avatar, unsafe_allow_html=True)
