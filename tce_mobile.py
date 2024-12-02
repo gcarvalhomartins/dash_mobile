@@ -59,15 +59,6 @@ df_fiscalizacoes['distancia_formatada'] = df_fiscalizacoes['distancia'].apply(
 )
 
 def main():
-    #----------------------Hide Streamlit footer----------------------------
-
-    hide_st_style = """
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    """
-    st.markdown(hide_st_style, unsafe_allow_html=True)
-    #--------------------------------------------------------------------
     st.title("TCE AM")
 
     # Filtro de cidades em ordem alfabética, removendo valores nulos
