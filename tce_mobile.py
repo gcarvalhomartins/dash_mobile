@@ -5,16 +5,17 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-
-# Remover completamente o ícone do criador e outros elementos
+# Desabilitar a barra lateral, o cabeçalho e o rodapé
 st.markdown("""
     <style>
-        #MainMenu {display: none;} /* Remover menu principal */
-        footer {display: none;}    /* Remover rodapé */
-        header {display: none;}    /* Remover cabeçalho */
-        .css-1v3fvcr {display: none;} /* Remover o ícone do criador */
+        #MainMenu {visibility: hidden;}  /* Ocultar o menu principal */
+        footer {visibility: hidden;}     /* Ocultar o rodapé */
+        header {visibility: hidden;}     /* Ocultar o cabeçalho */
+        .stApp {padding-top: 0;}         /* Ajustar o padding do topo */
+        .css-1v3fvcr {display: none;}    /* Ocultar o ícone do criador */
     </style>
 """, unsafe_allow_html=True)
+
 
 
 # Carrega variáveis de ambiente
