@@ -5,7 +5,7 @@ import streamlit as st
 import pydeck as pdk
 import os
 
-st.set_page_config(page_title="Seu App", page_icon=":guardsman:", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="TCE AM", page_icon=":guardsman:", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
