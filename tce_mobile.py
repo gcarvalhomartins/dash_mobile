@@ -5,12 +5,17 @@ import streamlit as st
 import pydeck as pdk
 import os
 
+
+# Remover completamente o ícone do criador e outros elementos
 st.markdown("""
-    <script>
-        document.querySelector('[data-testid="stDecoration"]').style.display = 'none';
-        document.querySelector('[data-testid="stStickyIcon"]').style.display = 'none';
-    </script>
+    <style>
+        #MainMenu {display: none;} /* Remover menu principal */
+        footer {display: none;}    /* Remover rodapé */
+        header {display: none;}    /* Remover cabeçalho */
+        .css-1v3fvcr {display: none;} /* Remover o ícone do criador */
+    </style>
 """, unsafe_allow_html=True)
+
 
 # Carrega variáveis de ambiente
 # load_dotenv()
