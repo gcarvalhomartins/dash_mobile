@@ -5,14 +5,17 @@ import streamlit as st
 import pydeck as pdk
 import os
 
+#----------------------Hide Streamlit footer----------------------------
 
-hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+hide_st_style = """
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
+#--------------------------------------------------------------------
+
+
 # from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
